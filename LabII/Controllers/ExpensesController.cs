@@ -57,7 +57,7 @@ namespace LabII.Controllers
         /// <returns>A list of expenses</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [Authorize(Roles = "Regular, Admin")]
+        //[Authorize(Roles = "Regular, Admin")]
         [HttpGet]
         public PaginatedList<ExpenseGetDTO> Get([FromQuery]DateTime? from, [FromQuery]DateTime? to, [FromQuery]Models.Type? type, [FromQuery]int page = 1)
         {
@@ -86,7 +86,7 @@ namespace LabII.Controllers
         /// <returns>One expense with specified id or not foud</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [Authorize(Roles = "Regular, Admin")]
+        //[Authorize(Roles = "Regular, Admin")]
         [HttpGet("{id}", Name = "Get")]
         public IActionResult Get(int id)
         {

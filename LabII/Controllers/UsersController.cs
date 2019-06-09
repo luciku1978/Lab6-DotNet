@@ -174,7 +174,7 @@ namespace LabII.Controllers
             var result = _userService.Upsert(id, userPostDTO, addedBy);
             if (result == null)
             {
-                return Forbid("You have no power here !");
+                return Forbid("You don't have rigts to perform this action!");
             }
             return Ok(result);
         }
@@ -188,17 +188,62 @@ namespace LabII.Controllers
         /// <returns></returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [Authorize(Roles = "Admin, UserManager")]
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            User addedBy = _userService.GetCurrentUser(HttpContext);
-            var result = _userService.Delete(id, addedBy);
+            //User addedBy = _userService.GetCurrentUser(HttpContext);
+            //var result = _userService.Delete(id, addedBy);
+            //if (result == null)
+            //{
+            //    return Forbid("You don't have rigts to perform this action!");
+            //}
+            //return Ok(result);
+
+            User currentLogedUser = _userService.GetCurrentUser(HttpContext);
+            var regDate = currentLogedUser.CreatedAt;
+            var currentDate = DateTime.Now;
+            var minDate = currentDate.Subtract(regDate).Days / (365 / 12);
+
+            if (currentLogedUser.UserRole == UserRole.UserManager)
+            {
+                User getUser = _userService.GetById(id);
+                if (getUser.UserRole == UserRole.Admin)
+                {
+                    return Forbid();
+                }
+
+            }
+
+            if (currentLogedUser.UserRole == UserRole.UserManager)
+            {
+                User getUser = _userService.GetById(id);
+                if (getUser.UserRole == UserRole.UserManager && minDate <= 6)
+
+                    return Forbid();
+            }
+            if (currentLogedUser.UserRole == UserRole.UserManager)
+            {
+                User getUser = _userService.GetById(id);
+                if (getUser.UserRole == UserRole.UserManager && minDate >= 6)
+                {
+                    var result1 = _userService.Delete(id);
+                    return Ok(result1);
+                }
+
+
+            }
+
+            var result = _userService.Delete(id);
             if (result == null)
             {
-                return NotFound("User with the given id not fount !");
+                return NotFound();
             }
+
+
             return Ok(result);
         }
+
     }
 }

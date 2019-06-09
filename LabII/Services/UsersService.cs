@@ -25,7 +25,7 @@ namespace LabII.Services
         User GetById(int id);
         User Create(UserPostDTO user);
         User Upsert(int id, UserPostDTO userPostModel, User addedBy);
-        User Delete(int id, User addedBy);
+        User Delete(int id);
 
     }
 
@@ -191,42 +191,17 @@ namespace LabII.Services
             return null;
         }
 
-        public User Delete(int id, User addedBy)
+        public User Delete(int id)
         {
-            var existing = context.Users.FirstOrDefault(u => u.Id == id);
+            var existing = context.Users.FirstOrDefault(user => user.Id == id);
             if (existing == null)
             {
                 return null;
             }
-
-            if (existing.UserRole.Equals(UserRole.Admin) && !addedBy.UserRole.Equals(UserRole.Admin))
-            {
-                return null;
-            }
-            else if ((existing.UserRole.Equals(UserRole.Regular) && addedBy.UserRole.Equals(UserRole.UserManager)) ||
-                (existing.UserRole.Equals(UserRole.UserManager) && addedBy.UserRole.Equals(UserRole.UserManager) && addedBy.CreatedAt.AddMonths(6) <= DateTime.Now))
-            {
-                context.Comments.RemoveRange(context.Comments.Where(u => u.Owner.Id == existing.Id));
-                context.SaveChanges();
-                context.Expenses.RemoveRange(context.Expenses.Where(u => u.Owner.Id == existing.Id));
-                context.SaveChanges();
-
-                context.Users.Remove(existing);
-                context.SaveChanges();
-                return existing;
-            }
-            else if (addedBy.UserRole.Equals(UserRole.Admin))
-            {
-                context.Comments.RemoveRange(context.Comments.Where(u => u.Owner.Id == existing.Id));
-                context.SaveChanges();
-                context.Expenses.RemoveRange(context.Expenses.Where(u => u.Owner.Id == existing.Id));
-                context.SaveChanges();
-
-                context.Users.Remove(existing);
-                context.SaveChanges();
-                return existing;
-            }
-            return null;
+            context.Users
+           .Remove(existing);
+            context.SaveChanges();
+            return existing;
         }
     }
 }
