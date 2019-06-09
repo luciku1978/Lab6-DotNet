@@ -17,32 +17,36 @@ namespace LabII.Controllers
     public class ExpensesController : ControllerBase
     {
         private IExpenseService expenseService;
-        public ExpensesController(IExpenseService expenseService)
+        private IUsersService usersService;
+        public ExpensesController(IExpenseService expenseService,IUsersService usersService)
         {
             this.expenseService = expenseService;
+            this.usersService = usersService;
         }
+
+        // GET: api/Expenses
         ///<remarks>
         ///{
-            ///"id": 7,
-            ///"description": "Variable",
-            ///"type": 2,
-            ///"location": "Bistrita",
-            ///"date": "2019-05-09T17:17:17",
-            ///"currency": "EURO",
-            ///"sum": 777.55,
-            ///"comments": [
-            ///{
-            ///"id": 1,
-            ///"text": "What?! 777.55",
-            ///"important": true
-            ///},
-            ///{
-            ///"id": 2,
-            ///"text": "Nice sum!",
-            ///"important": false
-            ///}
-            ///]
-            ///}
+        ///"id": 7,
+        ///"description": "Variable",
+        ///"type": 2,
+        ///"location": "Bistrita",
+        ///"date": "2019-05-09T17:17:17",
+        ///"currency": "EURO",
+        ///"sum": 777.55,
+        ///"comments": [
+        ///{
+        ///"id": 1,
+        ///"text": "What?! 777.55",
+        ///"important": true
+        ///},
+        ///{
+        ///"id": 2,
+        ///"text": "Nice sum!",
+        ///"important": false
+        ///}
+        ///]
+        ///}
         /// </remarks>
         /// <summary>
         /// Get all the expenses
@@ -53,7 +57,7 @@ namespace LabII.Controllers
         /// <returns>A list of expenses</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        // GET: api/Expenses
+        [Authorize(Roles = "Regular, Admin")]
         [HttpGet]
         public PaginatedList<ExpenseGetDTO> Get([FromQuery]DateTime? from, [FromQuery]DateTime? to, [FromQuery]Models.Type? type, [FromQuery]int page = 1)
         {
@@ -61,6 +65,7 @@ namespace LabII.Controllers
             return expenseService.GetAll(page, from, to, type);
         }
 
+        // GET: api/Expenses/5
         ///<remarks>
         ///{
         ///"id": 5,
@@ -81,7 +86,7 @@ namespace LabII.Controllers
         /// <returns>One expense with specified id or not foud</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        // GET: api/Expenses/5
+        [Authorize(Roles = "Regular, Admin")]
         [HttpGet("{id}", Name = "Get")]
         public IActionResult Get(int id)
         {
@@ -93,6 +98,8 @@ namespace LabII.Controllers
 
             return Ok(found);
         }
+
+        // POST: api/Expenses
         ///<remarks>
         ///{"description": "Fixed",
         ///"type": 5,
@@ -109,13 +116,15 @@ namespace LabII.Controllers
         /// <param name="expense"></param>
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        // POST: api/Expenses
-        [Authorize]
+        [Authorize(Roles = "Regular, Admin")]
         [HttpPost]
         public void Post([FromBody] ExpensePostDTO expense)
         {
-            expenseService.Create(expense);
+            User addedBy = usersService.GetCurrentUser(HttpContext);
+            expenseService.Create(expense, addedBy);
         }
+
+        // PUT: api/Expenses/5
         ///<remarks>
         ///{
         /// "id": 5,
@@ -135,8 +144,7 @@ namespace LabII.Controllers
         /// <returns>The added expense with all fields</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        // PUT: api/Expenses/5
-        [Authorize]
+        [Authorize(Roles = "Regular, Admin")]
         [HttpPut("{id}")]
         public IActionResult Put(int id, [FromBody] Expense expense)
         {
@@ -144,6 +152,8 @@ namespace LabII.Controllers
             var result = expenseService.Upsert(id, expense);
             return Ok(result);
         }
+
+        // DELETE: api/ApiWithActions/5
         ///<remarks>
         ///{
         ///"id": 5,
@@ -163,8 +173,7 @@ namespace LabII.Controllers
         /// <returns>The deleted item or not found</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        // DELETE: api/ApiWithActions/5
-        [Authorize]
+        [Authorize(Roles = "Regular, Admin")]
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {

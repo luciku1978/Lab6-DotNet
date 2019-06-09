@@ -1,5 +1,7 @@
 ﻿using LabII.DTOs;
 using LabII.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -17,7 +19,14 @@ namespace LabII.Services
     {
         UserGetDTO Authenticate(string username, string password);
         UserGetDTO Register(RegisterPostDTO registerInfo);
+        User GetCurrentUser(HttpContext httpContext);
         IEnumerable<UserGetDTO> GetAll();
+
+        User GetById(int id);
+        User Create(UserPostDTO user);
+        User Upsert(int id, UserPostDTO userPostModel, User addedBy);
+        User Delete(int id, User addedBy);
+
     }
 
     public class UsersService : IUsersService
@@ -48,7 +57,8 @@ namespace LabII.Services
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    new Claim(ClaimTypes.Name, user.Username.ToString())
+                    new Claim(ClaimTypes.Name, user.Username.ToString()),
+                    new Claim(ClaimTypes.Role,user.UserRole.ToString())
                 }),
                 Expires = DateTime.UtcNow.AddDays(7),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -61,7 +71,7 @@ namespace LabII.Services
                 Username = user.Username,
                 Token = tokenHandler.WriteToken(token)
             };
-            // remove password before returning
+           
             return result;
         }
 
@@ -98,10 +108,20 @@ namespace LabII.Services
                 LastName = registerInfo.LastName,
                 FirstName = registerInfo.FirstName,
                 Password = ComputeSha256Hash(registerInfo.Password),
-                Username = registerInfo.Username
+                Username = registerInfo.Username,
+                UserRole = UserRole.Regular,
+                
             });
             context.SaveChanges();
             return Authenticate(registerInfo.Username, registerInfo.Password);
+        }
+
+        public User GetCurrentUser(HttpContext httpContext)
+        {
+            string username = httpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
+            //string accountType = httpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.AuthenticationMethod).Value;
+            //return _context.Users.FirstOrDefault(u => u.Username == username && u.AccountType.ToString() == accountType);
+            return context.Users.FirstOrDefault(u => u.Username == username);
         }
 
         public IEnumerable<UserGetDTO> GetAll()
@@ -116,7 +136,97 @@ namespace LabII.Services
             });
         }
 
+        public User GetById(int id)
+        {
+            return context.Users
+                .FirstOrDefault(u => u.Id == id);
+        }
+
+        public User Create(UserPostDTO user)
+        {
+            User toAdd = UserPostDTO.ToUser(user);
+
+            context.Users.Add(toAdd);
+            context.SaveChanges();
+            return toAdd;
+
+        }
+
+        public User Upsert(int id, UserPostDTO user, User addedBy)
+        {
+            var existing = context.Users.AsNoTracking().FirstOrDefault(u => u.Id == id);
+            if (existing == null)
+            {
+                User toAdd = UserPostDTO.ToUser(user);
+                user.Password = ComputeSha256Hash(user.Password);
+                context.Users.Add(toAdd);
+                context.SaveChanges();
+                return toAdd;
+            }
+
+            User toUpdate = UserPostDTO.ToUser(user);
+            toUpdate.Password = existing.Password;
+            toUpdate.CreatedAt = existing.CreatedAt;
+            toUpdate.Id = id;
+
+            if (user.UserRole.Equals("Admin") && !addedBy.UserRole.Equals(UserRole.Admin))
+            {
+                return null;
+            }
+            else if ((existing.UserRole.Equals(UserRole.Regular) && addedBy.UserRole.Equals(UserRole.UserManager)) ||
+                (existing.UserRole.Equals(UserRole.UserManager) && addedBy.UserRole.Equals(UserRole.UserManager) && addedBy.CreatedAt.AddMonths(6) <= DateTime.Now))
+            {
+                context.Users.Update(toUpdate);
+                context.SaveChanges();
+                return toUpdate;
+            }
+            else if (addedBy.UserRole.Equals(UserRole.Admin))
+            {
+                context.Users.Update(toUpdate);
+                context.SaveChanges();
+                return toUpdate;
+            }
+
+
+            return null;
+        }
+
+        public User Delete(int id, User addedBy)
+        {
+            var existing = context.Users.FirstOrDefault(u => u.Id == id);
+            if (existing == null)
+            {
+                return null;
+            }
+
+            if (existing.UserRole.Equals(UserRole.Admin) && !addedBy.UserRole.Equals(UserRole.Admin))
+            {
+                return null;
+            }
+            else if ((existing.UserRole.Equals(UserRole.Regular) && addedBy.UserRole.Equals(UserRole.UserManager)) ||
+                (existing.UserRole.Equals(UserRole.UserManager) && addedBy.UserRole.Equals(UserRole.UserManager) && addedBy.CreatedAt.AddMonths(6) <= DateTime.Now))
+            {
+                context.Comments.RemoveRange(context.Comments.Where(u => u.Owner.Id == existing.Id));
+                context.SaveChanges();
+                context.Expenses.RemoveRange(context.Expenses.Where(u => u.Owner.Id == existing.Id));
+                context.SaveChanges();
+
+                context.Users.Remove(existing);
+                context.SaveChanges();
+                return existing;
+            }
+            else if (addedBy.UserRole.Equals(UserRole.Admin))
+            {
+                context.Comments.RemoveRange(context.Comments.Where(u => u.Owner.Id == existing.Id));
+                context.SaveChanges();
+                context.Expenses.RemoveRange(context.Expenses.Where(u => u.Owner.Id == existing.Id));
+                context.SaveChanges();
+
+                context.Users.Remove(existing);
+                context.SaveChanges();
+                return existing;
+            }
+            return null;
+        }
     }
-
-
 }

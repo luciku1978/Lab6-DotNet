@@ -4,14 +4,16 @@ using LabII.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace LabII.Migrations
 {
     [DbContext(typeof(ExpensesDbContext))]
-    partial class ExpensesDbContextModelSnapshot : ModelSnapshot
+    [Migration("20190606112104_AddOwnerForExpenseAndComment")]
+    partial class AddOwnerForExpenseAndComment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -75,8 +77,6 @@ namespace LabII.Migrations
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<DateTime>("CreatedAt");
-
                     b.Property<string>("Email");
 
                     b.Property<string>("FirstName");
@@ -85,25 +85,18 @@ namespace LabII.Migrations
 
                     b.Property<string>("Password");
 
-                    b.Property<int>("UserRole");
-
                     b.Property<string>("Username");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Username")
-                        .IsUnique()
-                        .HasFilter("[Username] IS NOT NULL");
 
                     b.ToTable("Users");
                 });
 
             modelBuilder.Entity("LabII.Models.Comment", b =>
                 {
-                    b.HasOne("LabII.Models.Expense", "Expense")
+                    b.HasOne("LabII.Models.Expense")
                         .WithMany("Comments")
-                        .HasForeignKey("ExpenseId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("ExpenseId");
 
                     b.HasOne("LabII.Models.User", "Owner")
                         .WithMany()
@@ -113,9 +106,8 @@ namespace LabII.Migrations
             modelBuilder.Entity("LabII.Models.Expense", b =>
                 {
                     b.HasOne("LabII.Models.User", "Owner")
-                        .WithMany("Expenses")
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .WithMany()
+                        .HasForeignKey("OwnerId");
                 });
 #pragma warning restore 612, 618
         }

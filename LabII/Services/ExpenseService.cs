@@ -15,7 +15,7 @@ namespace LabII.Services
 
         Expense GetById(int id);
 
-        Expense Create(ExpensePostDTO user);
+        Expense Create(ExpensePostDTO expense, User addedBy);
 
         Expense Upsert(int id, Expense user);
 
@@ -33,9 +33,10 @@ namespace LabII.Services
         }
 
 
-        public Expense Create(ExpensePostDTO expense)
+        public Expense Create(ExpensePostDTO expense, User addedBy)
         {
             Expense addExp = ExpensePostDTO.ToExpense(expense);
+            addExp.Owner = addedBy;
             context.Expenses.Add(addExp);
             context.SaveChanges();
             return addExp;
