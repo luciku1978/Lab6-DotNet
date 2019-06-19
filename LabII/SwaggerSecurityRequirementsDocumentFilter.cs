@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace LabII
+namespace Lab6
 {
     public class SwaggerSecurityRequirementsDocumentFilter : IDocumentFilter
 
