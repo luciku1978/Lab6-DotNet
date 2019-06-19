@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace LabII.DTOs
+namespace Lab6.Viewmodels
 {
-    public class UserGetDTO
+    public class UserGetModel
     {
         public int Id { get; set; }
         public string Username { get; set; }

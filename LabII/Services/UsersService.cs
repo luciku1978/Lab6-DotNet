@@ -1,5 +1,6 @@
-﻿using LabII.DTOs;
-using LabII.Models;
+﻿using Lab6.Viewmodels;
+using Lab6.Models;
+using Lab6.Validators;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -12,39 +13,46 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Lab6.Constants;
 
-namespace LabII.Services
+namespace Lab6.Services
 {
     public interface IUsersService
     {
-        UserGetDTO Authenticate(string username, string password);
-        UserGetDTO Register(RegisterPostDTO registerInfo);
+        LoginGetModel Authenticate(string username, string password);
+        ErrorsCollection Register(RegisterPostModel registerInfo);
         User GetCurrentUser(HttpContext httpContext);
-        IEnumerable<UserGetDTO> GetAll();
-
+        ErrorsCollection Create(UserPostModel user);
         User GetById(int id);
-        User Create(UserPostDTO user);
-        User Upsert(int id, UserPostDTO userPostModel, User addedBy);
+        User Upsert(int id, User user);
         User Delete(int id);
-
+        IEnumerable<UserGetModel> GetAll();
     }
 
     public class UsersService : IUsersService
     {
         private ExpensesDbContext context;
         private readonly AppSettings appSettings;
+        private IRegisterValidator registerValidator;
+        private ICreateValidator createValidator;
+        private IUserUserRolesService userUserRolesService;
 
-        public UsersService(ExpensesDbContext context, IOptions<AppSettings> appSettings)
+        public UsersService(ExpensesDbContext context, IRegisterValidator registerValidator, ICreateValidator createValidator, IUserUserRolesService userUserRolesService, IOptions<AppSettings> appSettings)
         {
             this.context = context;
             this.appSettings = appSettings.Value;
+            this.registerValidator = registerValidator;
+            this.userUserRolesService = userUserRolesService;
+            this.createValidator = createValidator;
         }
 
-        public UserGetDTO Authenticate(string username, string password)
+        public LoginGetModel Authenticate(string username, string password)
         {
             var user = context.Users
                 .SingleOrDefault(x => x.Username == username &&
                                  x.Password == ComputeSha256Hash(password));
+
+            string userRoleName = userUserRolesService.GetUserRoleNameById(user.Id);
 
             // return null if user not found
             if (user == null)
@@ -58,20 +66,19 @@ namespace LabII.Services
                 Subject = new ClaimsIdentity(new Claim[]
                 {
                     new Claim(ClaimTypes.Name, user.Username.ToString()),
-                    new Claim(ClaimTypes.Role,user.UserRole.ToString())
+                    new Claim(ClaimTypes.Role, userRoleName.ToString())
                 }),
                 Expires = DateTime.UtcNow.AddDays(7),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            var result = new UserGetDTO
+            var result = new LoginGetModel
             {
                 Id = user.Id,
                 Email = user.Email,
                 Username = user.Username,
                 Token = tokenHandler.WriteToken(token)
             };
-           
             return result;
         }
 
@@ -94,26 +101,47 @@ namespace LabII.Services
             }
         }
 
-        public UserGetDTO Register(RegisterPostDTO registerInfo)
+        public ErrorsCollection Register(RegisterPostModel registerInfo)
         {
-            User existing = context.Users.FirstOrDefault(u => u.Username == registerInfo.Username);
-            if (existing != null)
+            var errors = registerValidator.Validate(registerInfo, context);
+            if (errors != null)
             {
-                return null;
+                return errors;
             }
 
-            context.Users.Add(new User
+            User toAdd = new User
             {
-                Email = registerInfo.Email,
-                LastName = registerInfo.LastName,
                 FirstName = registerInfo.FirstName,
-                Password = ComputeSha256Hash(registerInfo.Password),
+                LastName = registerInfo.LastName,
+                Email = registerInfo.Email,
                 Username = registerInfo.Username,
-                UserRole = UserRole.Regular,
-                
+                Password = ComputeSha256Hash(registerInfo.Password),
+                UserUserRoles = new List<UserUserRole>()
+            };
+
+            var defaultRole = context
+              .UserRoles
+              .FirstOrDefault(ur => ur.Name == UserRoles.Regular);
+
+            context.Users.Add(toAdd);
+            context.UserUserRoles.Add(new UserUserRole
+            {
+                User = toAdd,
+                UserRole = defaultRole,
+                StartTime = DateTime.Now,
+                EndTime = null,
             });
+            
             context.SaveChanges();
-            return Authenticate(registerInfo.Username, registerInfo.Password);
+            return null;
+        }
+
+        public UserRole GetCurrentUserRole(User user)
+        {
+            return user
+                .UserUserRoles
+                .FirstOrDefault(userUserRole => userUserRole.EndTime == null)
+                .UserRole;
         }
 
         public User GetCurrentUser(HttpContext httpContext)
@@ -121,76 +149,62 @@ namespace LabII.Services
             string username = httpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name).Value;
             //string accountType = httpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.AuthenticationMethod).Value;
             //return _context.Users.FirstOrDefault(u => u.Username == username && u.AccountType.ToString() == accountType);
-            return context.Users.FirstOrDefault(u => u.Username == username);
+            return context.Users
+                 .Include(u => u.UserUserRoles)
+                 .FirstOrDefault(u => u.Username == username);
         }
 
-        public IEnumerable<UserGetDTO> GetAll()
+        public IEnumerable<UserGetModel> GetAll()
         {
             // return users without passwords
-            return context.Users.Select(user => new UserGetDTO
+            return context.Users.Select(user => new UserGetModel
             {
                 Id = user.Id,
                 Email = user.Email,
                 Username = user.Username,
-                Token = null
+                
             });
         }
 
-        public User GetById(int id)
+        public ErrorsCollection Create(UserPostModel createInfo)
         {
-            return context.Users
-                .FirstOrDefault(u => u.Id == id);
-        }
+            var errors = createValidator.Validate(createInfo, context);
+            if (errors != null)
+            {
+                return errors;
+            }
 
-        public User Create(UserPostDTO user)
-        {
-            User toAdd = UserPostDTO.ToUser(user);
+            User toAdd = new User
+            {
+                FirstName = createInfo.FirstName,
+                LastName = createInfo.LastName,
+                Email = createInfo.Email,
+                Username = createInfo.UserName,
+                Password = ComputeSha256Hash(createInfo.Password),
+                UserUserRoles = new List<UserUserRole>()
+            };
+
+            var defaultRole = context
+               .UserRoles
+               .FirstOrDefault(urole => urole.Name == UserRoles.Regular);
+
+
 
             context.Users.Add(toAdd);
+            context.UserUserRoles.Add(new UserUserRole
+            {
+                User = toAdd,
+                UserRole = defaultRole,
+                StartTime = DateTime.Now,
+                EndTime = null
+
+            });
+
             context.SaveChanges();
-            return toAdd;
-
-        }
-
-        public User Upsert(int id, UserPostDTO user, User addedBy)
-        {
-            var existing = context.Users.AsNoTracking().FirstOrDefault(u => u.Id == id);
-            if (existing == null)
-            {
-                User toAdd = UserPostDTO.ToUser(user);
-                user.Password = ComputeSha256Hash(user.Password);
-                context.Users.Add(toAdd);
-                context.SaveChanges();
-                return toAdd;
-            }
-
-            User toUpdate = UserPostDTO.ToUser(user);
-            toUpdate.Password = existing.Password;
-            toUpdate.CreatedAt = existing.CreatedAt;
-            toUpdate.Id = id;
-
-            if (user.UserRole.Equals("Admin") && !addedBy.UserRole.Equals(UserRole.Admin))
-            {
-                return null;
-            }
-            else if ((existing.UserRole.Equals(UserRole.Regular) && addedBy.UserRole.Equals(UserRole.UserManager)) ||
-                (existing.UserRole.Equals(UserRole.UserManager) && addedBy.UserRole.Equals(UserRole.UserManager) && addedBy.CreatedAt.AddMonths(6) <= DateTime.Now))
-            {
-                context.Users.Update(toUpdate);
-                context.SaveChanges();
-                return toUpdate;
-            }
-            else if (addedBy.UserRole.Equals(UserRole.Admin))
-            {
-                context.Users.Update(toUpdate);
-                context.SaveChanges();
-                return toUpdate;
-            }
-
-
             return null;
         }
 
+       
         public User Delete(int id)
         {
             var existing = context.Users.FirstOrDefault(user => user.Id == id);
@@ -198,10 +212,34 @@ namespace LabII.Services
             {
                 return null;
             }
-            context.Users
-           .Remove(existing);
+            context.Users.Remove(existing);
             context.SaveChanges();
             return existing;
+        }
+
+        public User GetById(int id)
+        {
+            return context.Users
+                .AsNoTracking()
+                .FirstOrDefault(u => u.Id == id);
+        }
+
+        public User Upsert(int id, User user)
+        {
+            var existing = context.Users.AsNoTracking().FirstOrDefault(u => u.Id == id);
+            if (existing == null)
+            {
+                user.Password = ComputeSha256Hash(user.Password);
+                context.Users.Add(user);
+                context.SaveChanges();
+                return user;
+
+            }
+            user.Id = id;
+            user.Password = ComputeSha256Hash(user.Password);
+            context.Users.Update(user);
+            context.SaveChanges();
+            return user;
         }
     }
 }

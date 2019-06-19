@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace LabII.Services
+namespace Lab6.Services
 {
     public class AppSettings
     {

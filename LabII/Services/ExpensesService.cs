@@ -1,41 +1,41 @@
-﻿using LabII.DTOs;
-using LabII.Models;
+﻿using Lab6.Viewmodels;
+using Lab6.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace LabII.Services
+namespace Lab6.Services
 {
     public interface IExpenseService
     {
 
-        PaginatedList<ExpenseGetDTO> GetAll(int page, DateTime? from=null, DateTime? to=null, Models.Type? type=null);
+        PaginatedListModel<ExpenseGetModel> GetAll(int page, DateTime? from=null, DateTime? to=null, Models.Type? type=null);
 
         Expense GetById(int id);
 
-        Expense Create(ExpensePostDTO expense, User addedBy);
+        Expense Create(ExpensePostModel expense, User addedBy);
 
-        Expense Upsert(int id, Expense user);
+        Expense Upsert(int id, Expense expense);
 
         Expense Delete(int id);
 
     }
-    public class ExpenseService : IExpenseService
+    public class ExpensesService : IExpenseService
     {       
 
         private ExpensesDbContext context;
 
-        public ExpenseService(ExpensesDbContext context)
+        public ExpensesService(ExpensesDbContext context)
         {
             this.context = context;
         }
 
 
-        public Expense Create(ExpensePostDTO expense, User addedBy)
+        public Expense Create(ExpensePostModel expense, User addedBy)
         {
-            Expense addExp = ExpensePostDTO.ToExpense(expense);
+            Expense addExp = ExpensePostModel.ToExpense(expense);
             addExp.Owner = addedBy;
             context.Expenses.Add(addExp);
             context.SaveChanges();
@@ -54,21 +54,16 @@ namespace LabII.Services
             return existing;
         }
        
-        public PaginatedList<ExpenseGetDTO> GetAll(int page, DateTime? from = null, DateTime? to = null, Models.Type? type = null)
+        public PaginatedListModel<ExpenseGetModel> GetAll(int page, DateTime? from = null, DateTime? to = null, Models.Type? type = null)
         {
             IQueryable<Expense> result = context
                 .Expenses
                 .OrderBy(e => e.Id)
                 .Include(x => x.Comments);
 
-            PaginatedList<ExpenseGetDTO> paginatedResult = new PaginatedList<ExpenseGetDTO>();
+            PaginatedListModel<ExpenseGetModel> paginatedResult = new PaginatedListModel<ExpenseGetModel>();
             paginatedResult.CurrentPage = page;
 
-            //if (page == null && from == null && to == null && type == null)
-
-            //{
-            //    return result;
-            //}
             if (from != null)
             {
                 result = result.Where(e => e.Date >= from);
@@ -81,11 +76,11 @@ namespace LabII.Services
             {
                 result = result.Where(e => e.Type == type);
             }
-            paginatedResult.NumberOfPages = (result.Count() - 1) / PaginatedList<ExpenseGetDTO>.EntriesPerPage + 1;
+            paginatedResult.NumberOfPages = (result.Count() - 1) / PaginatedListModel<ExpenseGetModel>.EntriesPerPage + 1;
             result = result
-                .Skip((page - 1) * PaginatedList<ExpenseGetDTO>.EntriesPerPage)
-                .Take(PaginatedList<ExpenseGetDTO>.EntriesPerPage);
-            paginatedResult.Entries = result.Select(e => ExpenseGetDTO.FromExpense(e)).ToList();
+                .Skip((page - 1) * PaginatedListModel<ExpenseGetModel>.EntriesPerPage)
+                .Take(PaginatedListModel<ExpenseGetModel>.EntriesPerPage);
+            paginatedResult.Entries = result.Select(e => ExpenseGetModel.FromExpense(e)).ToList();
 
             return paginatedResult;
         }

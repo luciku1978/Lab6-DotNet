@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Lab6.Migrations
 {
     [DbContext(typeof(ExpensesDbContext))]
-    [Migration("20190606194837_CascadeDeleteCommentsForFlower")]
-    partial class CascadeDeleteCommentsForFlower
+    [Migration("20190616154951_AddUsersAndRolesManyToMany")]
+    partial class AddUsersAndRolesManyToMany
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -21,7 +21,7 @@ namespace Lab6.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-            modelBuilder.Entity("LabII.Models.Comment", b =>
+            modelBuilder.Entity("Lab6.Models.Comment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -44,7 +44,7 @@ namespace Lab6.Migrations
                     b.ToTable("Comments");
                 });
 
-            modelBuilder.Entity("LabII.Models.Expense", b =>
+            modelBuilder.Entity("Lab6.Models.Expense", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -71,11 +71,13 @@ namespace Lab6.Migrations
                     b.ToTable("Expenses");
                 });
 
-            modelBuilder.Entity("LabII.Models.User", b =>
+            modelBuilder.Entity("Lab6.Models.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<DateTime>("CreatedAt");
 
                     b.Property<string>("Email");
 
@@ -96,23 +98,75 @@ namespace Lab6.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("LabII.Models.Comment", b =>
+            modelBuilder.Entity("Lab6.Models.UserRole", b =>
                 {
-                    b.HasOne("LabII.Models.Expense", "Expense")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Description");
+
+                    b.Property<string>("Name");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserRole");
+                });
+
+            modelBuilder.Entity("Lab6.Models.UserUserRole", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<DateTime?>("EndTime");
+
+                    b.Property<DateTime>("StartTime");
+
+                    b.Property<int>("UserId");
+
+                    b.Property<int>("UserRoleId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserRoleId");
+
+                    b.ToTable("UserUserRole");
+                });
+
+            modelBuilder.Entity("Lab6.Models.Comment", b =>
+                {
+                    b.HasOne("Lab6.Models.Expense", "Expense")
                         .WithMany("Comments")
                         .HasForeignKey("ExpenseId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("LabII.Models.User", "Owner")
+                    b.HasOne("Lab6.Models.User", "Owner")
                         .WithMany()
                         .HasForeignKey("OwnerId");
                 });
 
-            modelBuilder.Entity("LabII.Models.Expense", b =>
+            modelBuilder.Entity("Lab6.Models.Expense", b =>
                 {
-                    b.HasOne("LabII.Models.User", "Owner")
-                        .WithMany()
-                        .HasForeignKey("OwnerId");
+                    b.HasOne("Lab6.Models.User", "Owner")
+                        .WithMany("Expenses")
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Lab6.Models.UserUserRole", b =>
+                {
+                    b.HasOne("Lab6.Models.User", "User")
+                        .WithMany("UserUserRoles")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Lab6.Models.UserRole", "UserRole")
+                        .WithMany("UserUserRoles")
+                        .HasForeignKey("UserRoleId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618
         }

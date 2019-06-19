@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using LabII.DTOs;
-using LabII.Models;
-using LabII.Services;
+using Lab6.Viewmodels;
+using Lab6.Models;
+using Lab6.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
-namespace LabII.Controllers
+namespace Lab6.Controllers
 {
     // https://jasonwatmore.com/post/2018/08/14/aspnet-core-21-jwt-authentication-tutorial-with-example-api
     //[Route("api/[controller]/[action]")]
@@ -18,28 +19,17 @@ namespace LabII.Controllers
     public class UsersController : ControllerBase
     {
         private IUsersService _userService;
+        private IUserUserRolesService userUserRolesService;
 
-        public UsersController(IUsersService userService)
+        public UsersController(IUsersService userService, IUserUserRolesService userUserRolesService)
         {
             _userService = userService;
+            this.userUserRolesService = userUserRolesService;
         }
 
-        /// <summary>
-        /// Login for user 
-        /// </summary>
-        /// <remarks>
-        ///            {
-        ///            "username":"ilie91",
-        ///            "password":"123456"
-        ///            }
-        /// 
-        /// 
-        /// </remarks>
-        /// <param name="login">Enter username and password</param>
-        /// <returns>Return username , email and token</returns>
         [AllowAnonymous]
         [HttpPost("authenticate")]
-        public IActionResult Authenticate([FromBody]LoginPostDTO login)
+        public IActionResult Authenticate([FromBody]LoginPostModel login)
         {
             var user = _userService.Authenticate(login.Username, login.Password);
 
@@ -49,184 +39,80 @@ namespace LabII.Controllers
             return Ok(user);
         }
 
-        /// <summary>
-        /// Register a user in the database
-        /// </summary>
-        /// <remarks>
-        ///     {
-        ///         "firstName":"Carmen",
-        ///         "lastName":"Barbu",
-        ///         "username":"bcarmen",
-        ///         "email":"cb@yahoo.com",
-        ///         "password":"123456789"
-        ///        }
-        /// </remarks>
-        /// <param name="register">Introduce firstname, lastname,username,email and password</param>
-        /// <returns>Inserted user in database</returns>
         [AllowAnonymous]
         [HttpPost("register")]
         //[HttpPost]
-        public IActionResult Register([FromBody]RegisterPostDTO register)
+        public IActionResult Register([FromBody]RegisterPostModel registerModel)
         {
-            var user = _userService.Register(register);
-            if (user == null)
+            var errors = _userService.Register(registerModel);
+            if (errors != null)
             {
-                return BadRequest(new { ErrorMessage = "Username already exists." });
+                return BadRequest(errors);
             }
-            return Ok(user);
+            return Ok();
         }
 
-        [AllowAnonymous]
-        //[Authorize(Roles = "UserManager, Admin")]
         [HttpGet]
+        // [Authorize(Roles = "Admin,UserManager")]
         public IActionResult GetAll()
         {
             var users = _userService.GetAll();
             return Ok(users);
         }
 
-        /// <summary>
-        /// Find an user by the given id.
-        /// </summary>
-        /// <remarks>
-        /// Sample response:
-        ///
-        ///     Get /users
-        ///     {  
-        ///        id: 3,
-        ///        firstName = "Pop",
-        ///        lastName = "Andrei",
-        ///        userName = "user123",
-        ///        email = "Us1@yahoo.com",
-        ///        userRole = "regular"
-        ///     }
-        /// </remarks>
-        /// <param name="id">The id given as parameter</param>
-        /// <returns>The user with the given id</returns>
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        // GET: api/Users/5
-        [Authorize(Roles = "Admin, UserManager")]
-        [HttpGet("{id}", Name = "GetUser")]
-        public IActionResult Get(int id)
-        {
-            var found = _userService.GetById(id);
-            if (found == null)
-            {
-                return NotFound();
-            }
-            return Ok(found);
-        }
-
-
-        /// <summary>
-        /// Add an new User
-        /// </summary>
-        ///   /// <remarks>
-        /// Sample response:
-        ///
-        ///     Post /users
-        ///     {
-        ///        firstName = "Pop",
-        ///        lastName = "Andrei",
-        ///        userName = "user123",
-        ///        email = "Us1@yahoo.com",
-        ///        password = "123456",
-        ///        userRole = "regular"
-        ///     }
-        /// </remarks>
-        /// <param name="userPostDTO">The input user to be added</param>
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [Authorize(Roles = "Admin, UserManager")]
-        [HttpPost]
-        public void Post([FromBody] UserPostDTO userPostDTO)
-        {
-            _userService.Create(userPostDTO);
-        }
-
-
-
-        /// <summary>
-        /// Modify an user if exists in dbSet , or add if not exist
-        /// </summary>
-        /// <param name="id">id-ul user to update</param>
-        /// <param name="userPostDTO">obiect userPostDTO to update</param>
-        /// Sample request:
-        ///     <remarks>
-        ///     Put /users/id
-        ///     {
-        ///        firstName = "Pop",
-        ///        lastName = "Andrei",
-        ///        userName = "user123",
-        ///        email = "Us1@yahoo.com",
-        ///        userRole = "regular"
-        ///     }
-        /// </remarks>
-        /// <returns>Status 200 daca a fost modificat</returns>
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [Authorize(Roles = "Admin,UserManager")]
-        [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody] UserPostDTO userPostDTO)
+        [HttpPost]
+        [ProducesResponseType(201)]
+        [ProducesResponseType(400)]
+        public void Post([FromBody] UserPostModel user)
         {
-            User addedBy = _userService.GetCurrentUser(HttpContext);
-            var result = _userService.Upsert(id, userPostDTO, addedBy);
-            if (result == null)
-            {
-                return Forbid("You don't have rigts to perform this action!");
-            }
-            return Ok(result);
+
+            _userService.Create(user);
         }
 
-
-
-        /// <summary>
-        /// Delete an user
-        /// </summary>
-        /// <param name="id">User id to delete</param>
-        /// <returns></returns>
+        [Authorize(Roles = "Admin,UserManager")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [Authorize(Roles = "Admin, UserManager")]
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            //User addedBy = _userService.GetCurrentUser(HttpContext);
-            //var result = _userService.Delete(id, addedBy);
-            //if (result == null)
-            //{
-            //    return Forbid("You don't have rigts to perform this action!");
-            //}
-            //return Ok(result);
-
-            User currentLogedUser = _userService.GetCurrentUser(HttpContext);
-            var regDate = currentLogedUser.CreatedAt;
+            User currentLoggedUser = _userService.GetCurrentUser(HttpContext);
+            string loggedRoleName = HttpContext.User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Role).Value;
+            var regDate = currentLoggedUser.CreatedAt;
             var currentDate = DateTime.Now;
             var minDate = currentDate.Subtract(regDate).Days / (365 / 12);
 
-            if (currentLogedUser.UserRole == UserRole.UserManager)
+            if (loggedRoleName.Equals("UserManager"))
             {
-                User getUser = _userService.GetById(id);
-                if (getUser.UserRole == UserRole.Admin)
+                User getUserToDelete = _userService.GetById(id);
+                string userUserRoleToDelete = userUserRolesService.GetById(getUserToDelete.Id)
+                       .FirstOrDefault(uurole => uurole.EndTime == null)
+                       .UserRoleName;
+                if (userUserRoleToDelete.Equals("Admin"))
                 {
                     return Forbid();
                 }
 
             }
 
-            if (currentLogedUser.UserRole == UserRole.UserManager)
+            if (loggedRoleName.Equals("UserManager"))
             {
-                User getUser = _userService.GetById(id);
-                if (getUser.UserRole == UserRole.UserManager && minDate <= 6)
+                User getUserToDelete = _userService.GetById(id);
+                string userUserRoleToDelete = userUserRolesService.GetById(getUserToDelete.Id)
+                       .FirstOrDefault(uurole => uurole.EndTime == null)
+                       .UserRoleName;
+                if (userUserRoleToDelete.Equals("UserManager") && minDate <= 6)
 
                     return Forbid();
             }
-            if (currentLogedUser.UserRole == UserRole.UserManager)
+
+            if (loggedRoleName.Equals("UserManager"))
             {
-                User getUser = _userService.GetById(id);
-                if (getUser.UserRole == UserRole.UserManager && minDate >= 6)
+                User getUserToDelete = _userService.GetById(id);
+                string userUserRoleToDelete = userUserRolesService.GetById(getUserToDelete.Id)
+                       .FirstOrDefault(uurole => uurole.EndTime == null)
+                       .UserRoleName;
+                if (userUserRoleToDelete.Equals("UserManager") && minDate >= 6)
                 {
                     var result1 = _userService.Delete(id);
                     return Ok(result1);
@@ -245,5 +131,91 @@ namespace LabII.Controllers
             return Ok(result);
         }
 
+
+
+        [HttpGet("{id}")]
+        [Authorize(Roles = "Admin,UserManager")]
+        public IActionResult Get(int id)
+        {
+            var found = _userService.GetById(id);
+            if (found == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(found);
+        }
+        [Authorize(Roles = "Admin,UserManager")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        // PUT: api/Users/5
+        [HttpPut("{id}")]
+        public IActionResult Put(int id, [FromBody] User user)
+        {
+            User currentLoggedUser = _userService.GetCurrentUser(HttpContext);
+            string loggedRoleName = HttpContext.User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Role).Value;
+            var regDate = currentLoggedUser.CreatedAt;
+            var currentDate = DateTime.Now;
+            var minDate = currentDate.Subtract(regDate).Days / (365 / 12);
+
+
+            if (loggedRoleName.Equals("UserManager"))
+            {
+                User getUserToUp = _userService.GetById(id);
+
+                if (getUserToUp == null)
+                {
+                    return NotFound();
+                }
+
+            }
+
+
+            if (loggedRoleName.Equals("UserManager"))
+            {
+                User getUserToUp = _userService.GetById(id);
+                string userUserRoleToUp = userUserRolesService.GetById(getUserToUp.Id)
+                       .FirstOrDefault(uurole => uurole.EndTime == null)
+                       .UserRoleName;
+                if (userUserRoleToUp.Equals("Admin"))
+
+                    return Forbid();
+            }
+
+            if (loggedRoleName.Equals("UserManager"))
+            {
+                User getUserToUp = _userService.GetById(id);
+                string userUserRoleToUp = userUserRolesService.GetById(getUserToUp.Id)
+                       .FirstOrDefault(uurole => uurole.EndTime == null)
+                       .UserRoleName;
+                if (userUserRoleToUp.Equals("UserManager") && minDate <= 6)
+
+                    return Forbid();
+            }
+
+
+            if (loggedRoleName.Equals("UserManager"))
+            {
+                User getUserToUp = _userService.GetById(id);
+                string userUserRoleToUp = userUserRolesService.GetById(getUserToUp.Id)
+                       .FirstOrDefault(uurole => uurole.EndTime == null)
+                       .UserRoleName;
+                if (userUserRoleToUp.Equals("UserManager") && minDate >= 6)
+                {
+                    var result1 = _userService.Upsert(id, user);
+                    return Ok(result1);
+                }
+
+            }
+
+
+            var result = _userService.Upsert(id, user);
+            return Ok(result);
+
+
+        }
+
     }
 }
+
+
