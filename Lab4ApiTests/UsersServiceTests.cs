@@ -1,6 +1,5 @@
 using Lab6.Models;
 using Lab6.Services;
-using Lab6.Validators;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NUnit.Framework;
@@ -25,15 +24,12 @@ namespace Tests
         //public void ValidRegisterShouldCreateANewUser()
         //{
         //    var options = new DbContextOptionsBuilder<ExpensesDbContext>()
-        //      .UseInMemoryDatabase(databaseName: nameof(ValidRegisterShouldCreateANewUser))// "ValidRegisterShouldCreateANewUser")
+        //      .UseInMemoryDatabase(databaseName:nameof(ValidRegisterShouldCreateANewUser))// "ValidRegisterShouldCreateANewUser")
         //      .Options;
 
         //    using (var context = new ExpensesDbContext(options))
         //    {
-        //        var registerValidator = new RegisterValidator();
-        //        var createValidator = new CreateValidator();
-        //        var userUserRole = new UserUserRoleService();
-        //        var usersService = new UsersService(context, config);
+        //        var usersService = new UsersService(context,null, config);
         //        var added = new Lab6.Viewmodels.RegisterPostModel
 
         //        {
@@ -46,7 +42,7 @@ namespace Tests
         //        var result = usersService.Register(added);
 
         //        Assert.IsNull(result);
-
+               
 
         //    }
         //}
@@ -54,7 +50,7 @@ namespace Tests
         //[Test]
         //public void AuthenticateShouldLoginSuccessfullyTheUser()
         //{
-
+            
         //    var options = new DbContextOptionsBuilder<ExpensesDbContext>()
         //      .UseInMemoryDatabase(databaseName:nameof(AuthenticateShouldLoginSuccessfullyTheUser))// "ValidUsernameAndPasswordShouldLoginSuccessfully")
         //      .Options;
@@ -90,7 +86,7 @@ namespace Tests
 
         //}
 
-
+        
 
         //[Test]
         //public void ValidGetAllShouldDisplayAllUsers()
