@@ -29,8 +29,8 @@ namespace Tests
 
         //    using (var context = new ExpensesDbContext(options))
         //    {
-        //        var usersService = new UsersService(context,null, config);
-        //        var added = new Lab6.Viewmodels.RegisterPostModel
+        //        var usersService = new UsersService(context, config);
+        //        var added = new LabII.DTOs.RegisterPostDTO
 
         //        {
         //            Email = "petre@aol.com",
@@ -41,8 +41,8 @@ namespace Tests
         //        };
         //        var result = usersService.Register(added);
 
-        //        Assert.IsNull(result);
-               
+        //        Assert.IsNotNull(result);
+        //        Assert.AreEqual(added.Username, result.Username);
 
         //    }
         //}
@@ -54,6 +54,10 @@ namespace Tests
         //    var options = new DbContextOptionsBuilder<ExpensesDbContext>()
         //      .UseInMemoryDatabase(databaseName:nameof(AuthenticateShouldLoginSuccessfullyTheUser))// "ValidUsernameAndPasswordShouldLoginSuccessfully")
         //      .Options;
+
+        //    using (var context = new ExpensesDbContext(options))
+        //    {
+        //        var usersService = new UsersService(context, config);
 
         //    using (var context = new ExpensesDbContext(options))
         //    {
@@ -86,7 +90,7 @@ namespace Tests
 
         //}
 
-        
+
 
         //[Test]
         //public void ValidGetAllShouldDisplayAllUsers()
