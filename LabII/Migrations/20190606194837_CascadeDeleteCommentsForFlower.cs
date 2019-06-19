@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace LabII.Migrations
+namespace Lab6.Migrations
 {
     public partial class CascadeDeleteCommentsForFlower : Migration
     {
