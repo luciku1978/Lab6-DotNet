@@ -1,4 +1,4 @@
-﻿using Lab6.Models;
+﻿using LabII.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -7,9 +7,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Lab6.Viewmodels
+namespace LabII.DTOs
 {
-    public class UserPostModel
+    public class UserPostDTO
     {
         public string FirstName { get; set; }
         public string LastName { get; set; }
@@ -18,17 +18,17 @@ namespace Lab6.Viewmodels
         public string Password { get; set; }
         public string UserRole { get; set; }
 
-        public static User ToUser(UserPostModel user)
+        public static User ToUser(UserPostDTO user)
         {
-            //UserRole role = Models.UserRole.Regular;
+            UserRole role = Models.UserRole.Regular;
 
             if (user.UserRole == "UserManager")
             {
-                //role = Models.UserRole.UserManager;
+                role = Models.UserRole.UserManager;
             }
             else if (user.UserRole == "Admin")
             {
-                //role = Models.UserRole.Admin;
+                role = Models.UserRole.Admin;
             }
 
             return new User
@@ -38,7 +38,7 @@ namespace Lab6.Viewmodels
                 Username = user.UserName,
                 Email = user.Email,
                 Password = ComputeSha256Hash(user.Password),
-                //UserRole = role
+                UserRole = role
             };
         }
 

@@ -5,8 +5,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using Lab6.Services;
-using Lab6.Models;
+using LabII.Services;
+using LabII.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -19,10 +19,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.Swagger;
-using static Lab6.Services.UsersService;
-using Lab6.Validators;
+using static LabII.Services.UsersService;
 
-namespace Lab6
+namespace LabII
 {
     public class Startup
     {
@@ -96,15 +95,9 @@ namespace Lab6
                 };
             });
 
-            services.AddScoped<IExpenseService, ExpensesService>();
-            services.AddScoped<ICommentService, CommentsService>();
+            services.AddScoped<IExpenseService, ExpenseService>();
+            services.AddScoped<ICommentService, CommentService>();
             services.AddScoped<IUsersService, UsersService>();
-            services.AddScoped<IRegisterValidator, RegisterValidator>();
-            services.AddScoped<ICreateValidator, CreateValidator>();
-            services.AddScoped<IUserRoleService, UserRoleService>();
-            services.AddScoped<IUserUserRolesService, UserUserRoleService>();
-            services.AddScoped<IUserRoleValidator, UserRoleValidator>();
-
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

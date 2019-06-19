@@ -1,14 +1,14 @@
-﻿using Lab6.Models;
+﻿using LabII.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
-using Type = Lab6.Models.Type;
+using Type = LabII.Models.Type;
 
-namespace Lab6.Viewmodels
+namespace LabII.DTOs
 {
-    public class ExpenseGetModel
+    public class ExpenseGetDTO
     {
         
         public string Description { get; set; }
@@ -27,12 +27,10 @@ namespace Lab6.Viewmodels
 
         public int NumberOfComments { get; set; }
 
-        public User Owner { get; set; }
-
-        public static ExpenseGetModel FromExpense(Expense expense)
+        public static ExpenseGetDTO FromExpense(Expense expense)
         {
 
-            return new ExpenseGetModel
+            return new ExpenseGetDTO
             {
                 Description = expense.Description,
                 Type = expense.Type,
@@ -40,8 +38,8 @@ namespace Lab6.Viewmodels
                 Date = expense.Date,
                 Currency = expense.Currency,
                 Sum = expense.Sum,
-                NumberOfComments = expense.Comments.Count,
-                Owner = expense.Owner
+                NumberOfComments = expense.Comments.Count
+
             };
         }
     }

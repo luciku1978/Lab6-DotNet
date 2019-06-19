@@ -1,6 +1,5 @@
-using Lab6.Models;
-using Lab6.Services;
-using Lab6.Validators;
+using LabII.Models;
+using LabII.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NUnit.Framework;
@@ -21,107 +20,104 @@ namespace Tests
             });
         }
 
-        //[Test]
-        //public void ValidRegisterShouldCreateANewUser()
-        //{
-        //    var options = new DbContextOptionsBuilder<ExpensesDbContext>()
-        //      .UseInMemoryDatabase(databaseName: nameof(ValidRegisterShouldCreateANewUser))// "ValidRegisterShouldCreateANewUser")
-        //      .Options;
+        [Test]
+        public void ValidRegisterShouldCreateANewUser()
+        {
+            var options = new DbContextOptionsBuilder<ExpensesDbContext>()
+              .UseInMemoryDatabase(databaseName:nameof(ValidRegisterShouldCreateANewUser))// "ValidRegisterShouldCreateANewUser")
+              .Options;
 
-        //    using (var context = new ExpensesDbContext(options))
-        //    {
-        //        var registerValidator = new RegisterValidator();
-        //        var createValidator = new CreateValidator();
-        //        var userUserRole = new UserUserRoleService();
-        //        var usersService = new UsersService(context, config);
-        //        var added = new Lab6.Viewmodels.RegisterPostModel
+            using (var context = new ExpensesDbContext(options))
+            {
+                var usersService = new UsersService(context, config);
+                var added = new LabII.DTOs.RegisterPostDTO
 
-        //        {
-        //            Email = "petre@aol.com",
-        //            FirstName = "Petre",
-        //            LastName = "Popescu",
-        //            Password = "123456",
-        //            Username = "ppetre",
-        //        };
-        //        var result = usersService.Register(added);
+                {
+                    Email = "petre@aol.com",
+                    FirstName = "Petre",
+                    LastName = "Popescu",
+                    Password = "123456",
+                    Username = "ppetre",
+                };
+                var result = usersService.Register(added);
 
-        //        Assert.IsNull(result);
+                Assert.IsNotNull(result);
+                Assert.AreEqual(added.Username, result.Username);
 
+            }
+        }
 
-        //    }
-        //}
+        [Test]
+        public void AuthenticateShouldLoginSuccessfullyTheUser()
+        {
+            
+            var options = new DbContextOptionsBuilder<ExpensesDbContext>()
+              .UseInMemoryDatabase(databaseName:nameof(AuthenticateShouldLoginSuccessfullyTheUser))// "ValidUsernameAndPasswordShouldLoginSuccessfully")
+              .Options;
 
-        //[Test]
-        //public void AuthenticateShouldLoginSuccessfullyTheUser()
-        //{
+            using (var context = new ExpensesDbContext(options))
+            {
+                var usersService = new UsersService(context, config);
 
-        //    var options = new DbContextOptionsBuilder<ExpensesDbContext>()
-        //      .UseInMemoryDatabase(databaseName:nameof(AuthenticateShouldLoginSuccessfullyTheUser))// "ValidUsernameAndPasswordShouldLoginSuccessfully")
-        //      .Options;
+                var added = new LabII.DTOs.RegisterPostDTO
 
-        //    using (var context = new ExpensesDbContext(options))
-        //    {
-        //        var usersService = new UsersService(context,null, config);
+                {
+                    Email = "petre@aol.com",
+                    FirstName = "Petre",
+                    LastName = "Popica",
+                    Password = "123456",
+                    Username = "ppetre",
+                };
+                usersService.Register(added);
+                var loggedIn = new LabII.DTOs.LoginPostDTO
+                {
+                    Username = "ppetre",
+                    Password = "123456"
 
-        //        var added = new Lab6.Viewmodels.RegisterPostModel
+                };
+                var authoresult = usersService.Authenticate(added.Username, added.Password);
 
-        //        {
-        //            Email = "petre@aol.com",
-        //            FirstName = "Petre",
-        //            LastName = "Popica",
-        //            Password = "123456",
-        //            Username = "ppetre",
-        //        };
-        //        usersService.Register(added);
-        //        var loggedIn = new Lab6.Viewmodels.LoginPostModel
-        //        {
-        //            Username = "ppetre",
-        //            Password = "123456"
-
-        //        };
-        //        var authoresult = usersService.Authenticate(added.Username, added.Password);
-
-        //        Assert.IsNotNull(authoresult);
-        //        Assert.AreEqual(1, authoresult.Id);
-        //        Assert.AreEqual(loggedIn.Username, authoresult.Username);
-        //        //Assert.AreEqual(loggedIn.Password, UsersService.);
-        //    }
+                Assert.IsNotNull(authoresult);
+                Assert.AreEqual(1, authoresult.Id);
+                Assert.AreEqual(loggedIn.Username, authoresult.Username);
+                //Assert.AreEqual(loggedIn.Password, UsersService.);
+            }
 
 
-        //}
+        }
 
+        
 
+        [Test]
+        public void ValidGetAllShouldDisplayAllUsers()
+        {
+            var options = new DbContextOptionsBuilder<ExpensesDbContext>()
+              .UseInMemoryDatabase(databaseName:nameof(AuthenticateShouldLoginSuccessfullyTheUser))// "ValidGetAllShouldDisplayAllUsers")
+              .Options;
 
-        //[Test]
-        //public void ValidGetAllShouldDisplayAllUsers()
-        //{
-        //    var options = new DbContextOptionsBuilder<ExpensesDbContext>()
-        //      .UseInMemoryDatabase(databaseName:nameof(AuthenticateShouldLoginSuccessfullyTheUser))// "ValidGetAllShouldDisplayAllUsers")
-        //      .Options;
+            using (var context = new ExpensesDbContext(options))
+            {
+                var usersService = new UsersService(context, config);
 
-        //    using (var context = new ExpensesDbContext(options))
-        //    {
-        //        var usersService = new UsersService(context,null, config);
+                var added = new LabII.DTOs.RegisterPostDTO
 
-        //        var added = new Lab6.Viewmodels.RegisterPostModel
+                {
+                    Email = "petre@aol.com",
+                    FirstName = "Petre",
+                    LastName = "Popescu",
+                    Password = "123456",
+                    Username = "ppetre",
+                };
+                usersService.Register(added);
 
-        //        {
-        //            Email = "petre@aol.com",
-        //            FirstName = "Petre",
-        //            LastName = "Popescu",
-        //            Password = "123456",
-        //            Username = "ppetre",
-        //        };
-        //        usersService.Register(added);
+                // Act
+                var result = usersService.GetAll();
 
-        //        // Act
-        //        var result = usersService.GetAll();
+                // Assert
+                Assert.IsNotEmpty(result);
+                Assert.AreEqual(1, result.Count());
 
-        //        // Assert
-        //        Assert.IsNotEmpty(result);
-        //        Assert.AreEqual(1, result.Count());
-
-        //    }
-        //}
+            }
+        }
     }   
 }

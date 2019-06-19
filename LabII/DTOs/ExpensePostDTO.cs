@@ -1,14 +1,14 @@
-﻿using Lab6.Models;
+﻿using LabII.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
-using Type = Lab6.Models.Type;
+using Type = LabII.Models.Type;
 
-namespace Lab6.Viewmodels
+namespace LabII.DTOs
 {
-    public class ExpensePostModel
+    public class ExpensePostDTO
     {
         public string Description { get; set; }
 
@@ -26,7 +26,7 @@ namespace Lab6.Viewmodels
 
 
 
-        public static Expense ToExpense(ExpensePostModel expense)
+        public static Expense ToExpense(ExpensePostDTO expense)
         {
             Type expenseType = Models.Type.Utilities;
             if(expense.Type == "Food")

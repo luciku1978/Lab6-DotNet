@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Lab6.Viewmodels
+namespace LabII.DTOs
 {
-    public class PaginatedListModel<T>
+    public class PaginatedList<T>
     {
         public const int EntriesPerPage = 3;
         public int CurrentPage { get; set; }

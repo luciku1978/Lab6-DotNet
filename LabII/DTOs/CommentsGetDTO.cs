@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Lab6.Viewmodels
+namespace LabII.DTOs
 {
-    public class CommentGetModel
+    public class CommentsGetDTO
     {
         public int Id { get; set; }
         public string Text { get; set; }

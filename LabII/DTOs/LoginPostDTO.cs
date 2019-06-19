@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Lab6.Viewmodels
+namespace LabII.DTOs
 {
-    public class LoginPostModel
+    public class LoginPostDTO
     {
         public string Username { get; set; }
         public string Password { get; set; }

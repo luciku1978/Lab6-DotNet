@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Lab6.Models
+namespace LabII.Models
 {
     public class ExpensesDbContext : DbContext
     {
@@ -36,9 +36,5 @@ namespace Lab6.Models
         public DbSet<Comment> Comments { get; set; }
 
         public DbSet<User> Users { get; set; }
-
-        public DbSet<UserRole> UserRoles { get; set; }
-
-        public DbSet<UserUserRole> UserUserRoles { get; set; }
     }
 }

@@ -1,24 +1,24 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace Lab6.Migrations
+namespace LabII.Migrations
 {
     public partial class AddExpenseForComments : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            //migrationBuilder.AlterColumn<string>(
-            //    name: "Username",
-            //    table: "Users",
-            //    nullable: true,
-            //    oldClrType: typeof(string),
-            //    oldNullable: true);
+            migrationBuilder.AlterColumn<string>(
+                name: "Username",
+                table: "Users",
+                nullable: true,
+                oldClrType: typeof(string),
+                oldNullable: true);
 
-            //migrationBuilder.CreateIndex(
-            //    name: "IX_Users_Username",
-            //    table: "Users",
-            //    column: "Username",
-            //    unique: true,
-            //    filter: "[Username] IS NOT NULL");
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Username",
+                table: "Users",
+                column: "Username",
+                unique: true,
+                filter: "[Username] IS NOT NULL");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

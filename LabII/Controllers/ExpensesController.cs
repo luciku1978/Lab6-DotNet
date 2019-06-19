@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Lab6.Viewmodels;
-using Lab6.Models;
-using Lab6.Services;
+using LabII.DTOs;
+using LabII.Models;
+using LabII.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace Lab6.Controllers
+namespace LabII.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -18,7 +18,6 @@ namespace Lab6.Controllers
     {
         private IExpenseService expenseService;
         private IUsersService usersService;
-
         public ExpensesController(IExpenseService expenseService,IUsersService usersService)
         {
             this.expenseService = expenseService;
@@ -50,7 +49,7 @@ namespace Lab6.Controllers
         ///}
         /// </remarks>
         /// <summary>
-        /// GetAll all the expenses
+        /// Get all the expenses
         /// </summary>
         /// <param name="from">Optional, filtered by minimum date</param>
         /// <param name="to">Optional, filtered by maximu date</param>
@@ -60,7 +59,7 @@ namespace Lab6.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         //[Authorize(Roles = "Regular, Admin")]
         [HttpGet]
-        public PaginatedListModel<ExpenseGetModel> Get([FromQuery]DateTime? from, [FromQuery]DateTime? to, [FromQuery]Models.Type? type, [FromQuery]int page = 1)
+        public PaginatedList<ExpenseGetDTO> Get([FromQuery]DateTime? from, [FromQuery]DateTime? to, [FromQuery]Models.Type? type, [FromQuery]int page = 1)
         {
             page = Math.Max(page, 1);
             return expenseService.GetAll(page, from, to, type);
@@ -81,14 +80,14 @@ namespace Lab6.Controllers
         /// 
         /// </remarks>
         /// <summary>
-        /// GetAll an expense by a given id
+        /// Get an expense by a given id
         /// </summary>
         /// <param name="id">ID</param>
         /// <returns>One expense with specified id or not foud</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         //[Authorize(Roles = "Regular, Admin")]
-        [HttpGet("{id}", Name = "GetAll")]
+        [HttpGet("{id}", Name = "Get")]
         public IActionResult Get(int id)
         {
             var found = expenseService.GetById(id);
@@ -119,7 +118,7 @@ namespace Lab6.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [Authorize(Roles = "Regular, Admin")]
         [HttpPost]
-        public void Post([FromBody] ExpensePostModel expense)
+        public void Post([FromBody] ExpensePostDTO expense)
         {
             User addedBy = usersService.GetCurrentUser(HttpContext);
             expenseService.Create(expense, addedBy);

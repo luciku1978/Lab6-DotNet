@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace Lab6.Migrations
+namespace LabII.Migrations
 {
     public partial class AddDeleteOnCascadeForUsers : Migration
     {

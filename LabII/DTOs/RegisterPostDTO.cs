@@ -1,18 +1,21 @@
-﻿using Lab6.Models;
+﻿using LabII.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Lab6.Viewmodels
+namespace LabII.DTOs
 {
-    public class RegisterPostModel
+    public class RegisterPostDTO
     {
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Username { get; set; }
+        [EmailAddress]
         public string Email { get; set; }
+        [StringLength(55, MinimumLength = 6)]
         public string Password { get; set; }
-    }  
+      
+    }
 }

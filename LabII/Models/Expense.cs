@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Lab6.Models
+namespace LabII.Models
 {
     public enum Type
     {
