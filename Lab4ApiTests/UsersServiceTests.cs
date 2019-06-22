@@ -79,6 +79,34 @@ namespace Lab4ApiTests
             }
         }
 
+        [Test]
+        public void InvalidRegisterShouldReturnErrorsCollection()
+        {
+            var options = new DbContextOptionsBuilder<ExpensesDbContext>()
+                         .UseInMemoryDatabase(databaseName: nameof(InvalidRegisterShouldReturnErrorsCollection))
+                         .Options;
+
+            using (var context = new ExpensesDbContext(options))
+            {
+                var validator = new RegisterValidator();
+                var crValidator = new CreateValidator();
+                var usersService = new UsersService(context, validator,crValidator, null, config);
+                var added = new Lab6.Viewmodels.RegisterPostModel
+                {
+                    FirstName = "firstName1",
+                    LastName = "lastName1",
+                    Username = "test_userName1",
+                    Email = "first@yahoo.com",
+                    Password = "111"    //invalid password should invalidate register
+                };
+
+                var result = usersService.Register(added);
+
+                Assert.IsNotNull(result);
+                Assert.AreEqual(1, result.ErrorMessages.Count());
+            }
+        }
+
         //[Test]
         //public void AuthenticateShouldLoginSuccessfullyTheUser()
         //{
