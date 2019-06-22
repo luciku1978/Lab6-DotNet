@@ -37,15 +37,18 @@ namespace Lab6.Controllers
         ///  Gets all comments filtered by a string
         /// </summary>
         /// <param name="filter">Opyional, the keyword used to filter comments</param>
+        /// <param name="page"></param>
         /// <returns>List of comments</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         //[Authorize(Roles = "Regular, Admin")] -nu e necesar!
         // GET: api/Comments
         [HttpGet]
-        public IEnumerable<CommentGetModel> GetAll([FromQuery]String filter)
+        
+        public PaginatedListModel<CommentGetModel> GetAll([FromQuery]String filter, [FromQuery]int page = 1)
         {
-            return commentsService.GetAll(filter);
+            
+            return commentsService.GetAll(filter, page);
         }
 
         [HttpGet("{id}")]

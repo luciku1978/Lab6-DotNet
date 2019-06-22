@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Lab6.Viewmodels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,5 +15,10 @@ namespace Lab6.Models
         public UserRole UserRole { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime? EndTime { get; set; }
+
+        public static implicit operator UserUserRole(UserUserRolePostModel v)
+        {   
+            throw new NotImplementedException();
+        }
     }
 }

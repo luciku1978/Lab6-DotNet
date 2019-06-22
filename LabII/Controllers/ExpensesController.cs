@@ -55,6 +55,7 @@ namespace Lab6.Controllers
         /// <param name="from">Optional, filtered by minimum date</param>
         /// <param name="to">Optional, filtered by maximu date</param>
         /// <param name="type">Optional, filtered by type</param>
+        /// <param name="page"></param>
         /// <returns>A list of expenses</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

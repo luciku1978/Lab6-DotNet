@@ -10,7 +10,7 @@ namespace Lab6.Services
 {
     public interface ICommentService
     {
-        IEnumerable<CommentGetModel> GetAll(String filter);
+        PaginatedListModel<CommentGetModel> GetAll(String filter,int page);
         Comment Create(CommentPostModel comment, User addedBy);
 
         Comment Upsert(int id, Comment comment);
@@ -51,53 +51,29 @@ namespace Lab6.Services
             return existing;
         }
 
-        
-        public IEnumerable<CommentGetModel> GetAll(String filter)
+
+        public PaginatedListModel<CommentGetModel> GetAll(string filter, int page)
         {
-            IQueryable<Expense> result = context.Expenses.Include(c => c.Comments);
+            IQueryable<Comment> result = context
+                .Comments
+                .Where(c => string.IsNullOrEmpty(filter) || c.Text.Contains(filter))
+                .OrderBy(c => c.Id)
+                .Include(c => c.Expense);
 
-            List<CommentGetModel> resultFilteredComments = new List<CommentGetModel>();
-            List<CommentGetModel> resultAllComments = new List<CommentGetModel>();
+            PaginatedListModel<CommentGetModel> paginatedResult = new PaginatedListModel<CommentGetModel>();
+            paginatedResult.CurrentPage = page;
 
-            foreach (Expense expense in result)
-            {
-                expense.Comments.ForEach(c =>
-                {
-                    if(c.Text==null || filter == null)
-                    {
-                        CommentGetModel comment = new CommentGetModel
-                        {
-                            Id = c.Id,
-                            Important = c.Important,
-                            Text = c.Text,
-                            ExpenseId = expense.Id
+            paginatedResult.NumberOfPages = (result.Count() - 1) / PaginatedListModel<CommentGetModel>.EntriesPerPage + 1;
+            result = result
+                .Skip((page - 1) * PaginatedListModel<CommentGetModel>.EntriesPerPage)
+                .Take(PaginatedListModel<CommentGetModel>.EntriesPerPage);
+            paginatedResult.Entries = result.Select(f => CommentGetModel.FromComment(f)).ToList();
 
-                        };
-                        resultAllComments.Add(comment);
-                    }
-                    else if (c.Text.Contains(filter))
-                    {
-                        CommentGetModel comment = new CommentGetModel
-                        {
-                            Id = c.Id,
-                            Important = c.Important,
-                            Text = c.Text,
-                            ExpenseId = expense.Id
-
-                        };
-                        resultFilteredComments.Add(comment);
-
-                    }
-                });
-            }
-            if(filter == null)
-            {
-                return resultAllComments;
-            }
-            return resultFilteredComments;
+            return paginatedResult;
         }
+    
 
-        public Comment GetById(int id)
+    public Comment GetById(int id)
         {
             return context.Comments.FirstOrDefault(c => c.Id == id);
         }

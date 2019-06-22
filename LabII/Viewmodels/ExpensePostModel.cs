@@ -24,7 +24,7 @@ namespace Lab6.Viewmodels
 
         public double Sum { get; set; }
 
-
+        public List<Comment> Comments { get; set; }
 
         public static Expense ToExpense(ExpensePostModel expense)
         {
@@ -64,8 +64,8 @@ namespace Lab6.Viewmodels
                 Location = expense.Location,
                 Date = expense.Date,
                 Currency = expense.Currency,
-                Sum = expense.Sum
-                
+                Sum = expense.Sum,
+                Comments = expense.Comments
             };
 
 
