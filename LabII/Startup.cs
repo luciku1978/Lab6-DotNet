@@ -49,7 +49,7 @@ namespace Lab6
                     TermsOfService = "None",
                     Contact = new Contact
                     {
-                        Name = "Dénes",
+                        Name = "Lucian",
                         Email = string.Empty,
                         Url = ""
                     },

@@ -66,6 +66,7 @@ namespace Lab6.Viewmodels
                 Currency = expense.Currency,
                 Sum = expense.Sum,
                 Comments = expense.Comments
+                
             };
 
 
